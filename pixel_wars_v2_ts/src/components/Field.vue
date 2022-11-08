@@ -3,15 +3,16 @@
     </canvas>
 </template>
 
-<script>
+<script lang="ts">
  
 export default {
 
         mounted() {
-            const ctx = this.$refs.myCanvas.getContext('2d') 
+            const canvas:any = this.$refs.myCanvas
+            const ctx = canvas.getContext('2d') 
 
-            for (let i = 0; i < 50; i++) {
-                for (let j = 0; j < 50; j++) {
+            for (let i:number = 0; i < 50; i++) {
+                for (let j:number = 0; j < 50; j++) {
                     ctx.fillStyle = `rgb(
                         ${Math.floor(255 - 16 * i)},
                         ${Math.floor(255 - 16 * j)},
@@ -21,8 +22,6 @@ export default {
             } 
         },
     };
-
-
 </script>
 
 <style scoped>
