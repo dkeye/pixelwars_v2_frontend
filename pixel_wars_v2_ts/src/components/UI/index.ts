@@ -1,6 +1,7 @@
-import Pixel from './Pixel.vue';
-
+import MyInput from './MyInput.vue';
+import MyForm from './MyForm.vue';
+import MyButton from './MyButton.vue'
 
 export default [
-    Pixel
+    MyInput, MyForm, MyButton
 ]
