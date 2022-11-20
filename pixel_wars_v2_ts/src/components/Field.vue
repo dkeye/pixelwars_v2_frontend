@@ -11,103 +11,130 @@
 <script lang="ts">
 export default {
     name: 'my-field',
+    
     props: {
         pixelSize: {
-            type: Number, String,
-        }
+            type: Number,
+            default: 2,        }
     },
+
     data(){
         return {
-            height: Math.round(window.innerHeight * 0.9),
-            width: Math.round((window.innerHeight * 0.9) / 2),
+            height: function() {
+                let inHeight: number = Math.round(window.outerHeight);
+
+                if (inHeight % 10 != 0) {
+                    let resultNumb: number = inHeight % 10;
+                    inHeight = inHeight - resultNumb;
+                };
+                return inHeight;
+            },
+            width: Math.round(window.outerHeight / 2),
+            gridColumns: [
+                {}
+            ],
         }
     },
 
     mounted() {
         let [canvas, ctx] = this.canvasNewContext();            
         this.generateCanvasGrid(this.pixelSize, canvas, ctx);
-        this.canvasCoorsXY(canvas);
-    },
-
-    updated() {
-        let [canvas, ctx] = this.canvasNewContext();            
-        this.generateCanvasGrid(this.pixelSize, canvas, ctx);
+        this.canvasСoordinatesXY(canvas);
     },
 
     methods: {
         canvasNewContext() {
             const canvas:any = this.$refs.myCanvas;
             const ctx = canvas.getContext('2d');
-            canvas.height =  window.innerHeight * 0.9;
+            canvas.height =  window.outerHeight;
             canvas.width = canvas.height / 2 ;
             ctx.strokeStyle = 'rgb(1,222,166)'
             return [canvas, ctx]
         },
         
-        generateCanvasGrid(pxSize:any, canvas:any, ctx: any) {
-            console.log(pxSize)
+        generateCanvasGrid(pxSize:number, canvas:any, ctx: any) {
             this.pixGenerate(pxSize);
+            let columns = canvas.width / pxSize;
+            let rows = Math.round(canvas.height / pxSize);
 
-            window.onresize= function(){
-                canvas.height =  window.innerHeight * 0.9;
+            window.addEventListener("resize",() => {
+                canvas.height = window.outerHeight;
                 canvas.width = canvas.height / 2 ;
-                let widthPix = Math.floor(canvas.width / pxSize);
-                let heightPix = canvas.height / pxSize;
+                pxSize = window.outerHeight / rows;
 
                 if (canvas.width % pxSize != 0) {
-                    let result = canvas.width % pxSize;
+                    let result = Math.round(canvas.width % pxSize);
                     canvas.width = canvas.width - result;
-                    canvas.height = canvas.height + Math.floor(result / 2);
-                    ctx.strokeStyle = 'rgb(1,222,166)'
+                    canvas.height = Math.round(canvas.height - result * 2);
                 }
 
-                for (let numHrzPixel = 1; numHrzPixel < widthPix - 1 ; numHrzPixel++) {
-                    for(let numVrtPixel = 1; numVrtPixel < heightPix - 1 ; numVrtPixel++) {
-                        ctx.strokeRect( pxSize * numHrzPixel, pxSize * numVrtPixel, pxSize, pxSize)
+                for (let positionX = 0; positionX < columns ; positionX++) {
+                    for(let positionY = 0; positionY < rows ; positionY++) {
+                        ctx.strokeRect( pxSize * positionX, pxSize * positionY, pxSize, pxSize);
                     };
                 };
-            };
+            });
         },
 
-        relativeCoors(ev:any) {
+        relativeСoordinates(ev:any) {
             return {
                 x: ev.pageX - ev.target.offsetLeft,
                 y: ev.pageY - ev.target.offsetTop
             };
         },
 
-        canvasCoorsXY(canvas:any) {
-            canvas.addEventListener('mousemove', (e:any) => {
-                const { x, y } = this.relativeCoors(e);
+        canvasСoordinatesXY(canvas:any) {
+            canvas.addEventListener('click', (e:any) => {
+                const { x, y } = this.relativeСoordinates(e);
                 canvas.innerHTML = `X: ${x}, Y: ${y}`;
                 console.log('X: ',x,'\nY: ', y)
-            });
+                console.log(this.getSquarePositionXY(x, y))
+            })
+            // canvas.addEventListener('mousemove', (e:any) => {
+            //     const { x, y } = this.relativeСoordinates(e);
+            // });
         },
 
         pixGenerate(pixSize:any) {
-            if (this.width % pixSize === 0) {
-                const canvas:any = this.$refs.myCanvas;
-                const ctx = canvas.getContext('2d');
-                let widthPix = Math.floor(this.width / pixSize);
-                let heightPix = this.height / pixSize;
+            const canvas:any = this.$refs.myCanvas;
+            const ctx = canvas.getContext('2d');
+            let gridColumns: any[] = [];
+            let gridRow: object[] = [];
 
-                for(let numHrzPixel = 1; numHrzPixel < widthPix - 1 ; numHrzPixel++) {
-                    for(let numVrtPixel = 1; numVrtPixel < heightPix - 1 ; numVrtPixel++) {
-                        ctx.strokeRect( pixSize * numHrzPixel, pixSize * numVrtPixel, pixSize, pixSize)
+            if (this.width % pixSize === 0) {            
+                canvas.height = window.outerHeight + (pixSize - (window.outerHeight % pixSize));
+                canvas.width = (canvas.height / 2) + ((canvas.height / 2) % pixSize) ;
+                let columns = canvas.width / pixSize;
+                let rows = canvas.height / pixSize;
+                
+                for(let positionX = 0; positionX < columns ; positionX++) {
+                    for(let positionY = 0; positionY < rows ; positionY++) {
+                        ctx.strokeRect( pixSize * positionX, pixSize * positionY, pixSize, pixSize)
+                        gridRow.push({
+                            positionX,
+                            positionY,
+                            color: '#000000',
+                        });
                     };
+                    gridColumns.push(gridRow)
+                    gridRow = [];
                 };
+                this.gridColumns.splice(0, this.gridColumns.length);
+                this.gridColumns.push(gridColumns);
+
             } else {
                 let result = this.width % pixSize;
                 this.width = this.width - result;
-                this.height = this.height + Math.floor(result / 2);
-    
-                if (pixSize == "") {
-                    this.$emit('update:setPixelSizeField', 0);
-                } else {
-                    this.pixGenerate(Number(pixSize));
-                }
+                this.pixGenerate(Number(pixSize));
             }
         },
+
+        getSquarePositionXY(x:number, y:number) {
+            return {
+                x: Math.floor(x / this.pixelSize),
+                y: Math.floor(y / this.pixelSize)
+            }
+        }
     }
 };
 </script>

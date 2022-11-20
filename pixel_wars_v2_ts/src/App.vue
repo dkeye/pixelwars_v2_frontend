@@ -5,15 +5,9 @@
         <h1> Pixel warS </h1>
       </div>
       <Field
-        :pixelSize = "processData.pixelSize"
-        v-model:setPixelSizeField="processData.pixelSize"
+        v-model:pixelSize = "processData.pixelSize"
+        @updatePixelGrid="processData.gridCoordColors"
       />
-      <div class="settings">
-        <my-form
-          v-model:setPixelSizeForm="processData.pixelSize"
-          :formID="'change-pixel-size-form'"
-        />
-      </div>
     </div>
   </div>
 </template>
@@ -27,7 +21,8 @@
       return {
         screenHeight: screen.availHeight,
         processData: {
-          pixelSize: 6,
+          pixelSize: 80,
+          gridCoordColors: [],
         }
       };
     },
@@ -53,9 +48,5 @@
     line-height: 30px;
     letter-spacing: 8px;
     font-family: monospace;
-  }
-  .settings {
-    display: flex;
-    justify-content: end;
   }
 </style>
